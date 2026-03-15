@@ -1,0 +1,30 @@
+{
+    "name": "@argus/root",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev",
+        "test": "turbo run test",
+        "typecheck": "turbo run typecheck",
+        "e2e": "turbo run e2e",
+        "format-and-lint": "biome check --write",
+        "prepare": "husky"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.4.0",
+        "husky": "^9.0.0",
+        "lint-staged": "^15.0.0",
+        "turbo": "^2.8.0",
+        "typescript": "~5.9.0"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx,json}": [
+            "biome check --write --no-errors-on-unmatched"
+        ]
+    },
+    "packageManager": "pnpm@10.12.1",
+    "engines": {
+        "node": ">=22"
+    }
+}

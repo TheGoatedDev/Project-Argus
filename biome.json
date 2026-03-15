@@ -1,0 +1,44 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+    "assist": {
+        "enabled": true
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true
+        }
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4
+    },
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "overrides": [
+        {
+            "includes": ["**/components/ui/**"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noDocumentCookie": "off"
+                    },
+                    "a11y": {
+                        "useSemanticElements": "off",
+                        "useKeyWithClickEvents": "off"
+                    },
+                    "correctness": {
+                        "useExhaustiveDependencies": "off"
+                    }
+                }
+            }
+        }
+    ],
+    "files": {
+        "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
+    }
+}

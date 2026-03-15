@@ -1,0 +1,25 @@
+{
+    "name": "@argus/scraper-sdk",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.mts"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@argus/types": "workspace:*"
+    },
+    "devDependencies": {
+        "tsdown": "^0.20.0",
+        "typescript": "~5.9.0",
+        "vitest": "^4.1.0"
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "name": "@argus/db",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.mts"
+        },
+        "./schema": {
+            "import": "./dist/schema.mjs",
+            "types": "./dist/schema.d.mts"
+        },
+        "./client": {
+            "import": "./dist/client.mjs",
+            "types": "./dist/client.d.mts"
+        },
+        "./zod": {
+            "import": "./dist/zod.mjs",
+            "types": "./dist/zod.d.mts"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "db:generate": "drizzle-kit generate",
+        "db:push": "drizzle-kit push"
+    },
+    "dependencies": {
+        "drizzle-orm": "^0.45.0",
+        "postgres": "^3.4.0",
+        "@argus/types": "workspace:*"
+    },
+    "devDependencies": {
+        "drizzle-kit": "^0.31.0",
+        "tsdown": "^0.20.0",
+        "typescript": "~5.9.0",
+        "@electric-sql/pglite": "^0.3.0",
+        "vitest": "^4.1.0",
+        "zod": "^4.3.0"
+    }
+}

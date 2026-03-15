@@ -1,0 +1,23 @@
+{
+    "name": "@argus/types",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.mts"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "zod": "^4.3.0"
+    },
+    "devDependencies": {
+        "tsdown": "^0.20.0",
+        "typescript": "~5.9.0"
+    }
+}
