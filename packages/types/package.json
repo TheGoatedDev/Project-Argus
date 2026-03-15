@@ -17,6 +17,7 @@
         "zod": "^4.3.0"
     },
     "devDependencies": {
+        "@argus/typescript-config": "workspace:*",
         "tsdown": "^0.20.0",
         "typescript": "~5.9.0"
     }

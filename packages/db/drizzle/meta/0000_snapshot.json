@@ -1,0 +1,717 @@
+{
+    "id": "241f460d-3d0b-4adc-9adc-fde2cd824320",
+    "prevId": "00000000-0000-0000-0000-000000000000",
+    "version": "7",
+    "dialect": "postgresql",
+    "tables": {
+        "public.crawl_job_entities": {
+            "name": "crawl_job_entities",
+            "schema": "",
+            "columns": {
+                "crawl_job_id": {
+                    "name": "crawl_job_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "entity_id": {
+                    "name": "entity_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "depth": {
+                    "name": "depth",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "scraper_used": {
+                    "name": "scraper_used",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "added_at": {
+                    "name": "added_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "crawl_job_entities_crawl_job_id_crawl_jobs_id_fk": {
+                    "name": "crawl_job_entities_crawl_job_id_crawl_jobs_id_fk",
+                    "tableFrom": "crawl_job_entities",
+                    "tableTo": "crawl_jobs",
+                    "columnsFrom": ["crawl_job_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                },
+                "crawl_job_entities_entity_id_entities_id_fk": {
+                    "name": "crawl_job_entities_entity_id_entities_id_fk",
+                    "tableFrom": "crawl_job_entities",
+                    "tableTo": "entities",
+                    "columnsFrom": ["entity_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {
+                "crawl_job_entities_crawl_job_id_entity_id_pk": {
+                    "name": "crawl_job_entities_crawl_job_id_entity_id_pk",
+                    "columns": ["crawl_job_id", "entity_id"]
+                }
+            },
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.crawl_jobs": {
+            "name": "crawl_jobs",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "seed_query": {
+                    "name": "seed_query",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "seed_type": {
+                    "name": "seed_type",
+                    "type": "entity_type",
+                    "typeSchema": "public",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "max_depth": {
+                    "name": "max_depth",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "current_depth": {
+                    "name": "current_depth",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": 0
+                },
+                "status": {
+                    "name": "status",
+                    "type": "crawl_status",
+                    "typeSchema": "public",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "'pending'"
+                },
+                "total_entities": {
+                    "name": "total_entities",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": 0
+                },
+                "total_edges": {
+                    "name": "total_edges",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": 0
+                },
+                "error": {
+                    "name": "error",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "completed_at": {
+                    "name": "completed_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.data_points": {
+            "name": "data_points",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "entity_id": {
+                    "name": "entity_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "source_provider": {
+                    "name": "source_provider",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "source_url": {
+                    "name": "source_url",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "raw_data": {
+                    "name": "raw_data",
+                    "type": "jsonb",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "fetched_at": {
+                    "name": "fetched_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {
+                "data_points_entity_id_idx": {
+                    "name": "data_points_entity_id_idx",
+                    "columns": [
+                        {
+                            "expression": "entity_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                }
+            },
+            "foreignKeys": {
+                "data_points_entity_id_entities_id_fk": {
+                    "name": "data_points_entity_id_entities_id_fk",
+                    "tableFrom": "data_points",
+                    "tableTo": "entities",
+                    "columnsFrom": ["entity_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.entities": {
+            "name": "entities",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "type": {
+                    "name": "type",
+                    "type": "entity_type",
+                    "typeSchema": "public",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "metadata": {
+                    "name": "metadata",
+                    "type": "jsonb",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "default": "'{}'::jsonb"
+                },
+                "search_vector": {
+                    "name": "search_vector",
+                    "type": "tsvector",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {
+                "entities_type_idx": {
+                    "name": "entities_type_idx",
+                    "columns": [
+                        {
+                            "expression": "type",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "entities_deleted_at_idx": {
+                    "name": "entities_deleted_at_idx",
+                    "columns": [
+                        {
+                            "expression": "deleted_at",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "where": "deleted_at IS NULL",
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "entities_type_name_active_idx": {
+                    "name": "entities_type_name_active_idx",
+                    "columns": [
+                        {
+                            "expression": "type",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        },
+                        {
+                            "expression": "name",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": true,
+                    "where": "deleted_at IS NULL",
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "entities_search_vector_idx": {
+                    "name": "entities_search_vector_idx",
+                    "columns": [
+                        {
+                            "expression": "search_vector",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "gin",
+                    "with": {}
+                }
+            },
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.entity_edges": {
+            "name": "entity_edges",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "source_id": {
+                    "name": "source_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "target_id": {
+                    "name": "target_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "edge_type": {
+                    "name": "edge_type",
+                    "type": "edge_type",
+                    "typeSchema": "public",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "confidence": {
+                    "name": "confidence",
+                    "type": "real",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": 1
+                },
+                "source_provider": {
+                    "name": "source_provider",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "metadata": {
+                    "name": "metadata",
+                    "type": "jsonb",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "default": "'{}'::jsonb"
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {
+                "edges_source_id_idx": {
+                    "name": "edges_source_id_idx",
+                    "columns": [
+                        {
+                            "expression": "source_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "edges_target_id_idx": {
+                    "name": "edges_target_id_idx",
+                    "columns": [
+                        {
+                            "expression": "target_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "edges_source_type_idx": {
+                    "name": "edges_source_type_idx",
+                    "columns": [
+                        {
+                            "expression": "source_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        },
+                        {
+                            "expression": "edge_type",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "edges_target_type_idx": {
+                    "name": "edges_target_type_idx",
+                    "columns": [
+                        {
+                            "expression": "target_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        },
+                        {
+                            "expression": "edge_type",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "edges_unique_active_idx": {
+                    "name": "edges_unique_active_idx",
+                    "columns": [
+                        {
+                            "expression": "source_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        },
+                        {
+                            "expression": "target_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        },
+                        {
+                            "expression": "edge_type",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": true,
+                    "where": "true",
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                }
+            },
+            "foreignKeys": {
+                "entity_edges_source_id_entities_id_fk": {
+                    "name": "entity_edges_source_id_entities_id_fk",
+                    "tableFrom": "entity_edges",
+                    "tableTo": "entities",
+                    "columnsFrom": ["source_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "entity_edges_target_id_entities_id_fk": {
+                    "name": "entity_edges_target_id_entities_id_fk",
+                    "tableFrom": "entity_edges",
+                    "tableTo": "entities",
+                    "columnsFrom": ["target_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.investigation_entities": {
+            "name": "investigation_entities",
+            "schema": "",
+            "columns": {
+                "investigation_id": {
+                    "name": "investigation_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "entity_id": {
+                    "name": "entity_id",
+                    "type": "uuid",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "added_at": {
+                    "name": "added_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "notes": {
+                    "name": "notes",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "investigation_entities_investigation_id_investigations_id_fk": {
+                    "name": "investigation_entities_investigation_id_investigations_id_fk",
+                    "tableFrom": "investigation_entities",
+                    "tableTo": "investigations",
+                    "columnsFrom": ["investigation_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                },
+                "investigation_entities_entity_id_entities_id_fk": {
+                    "name": "investigation_entities_entity_id_entities_id_fk",
+                    "tableFrom": "investigation_entities",
+                    "tableTo": "entities",
+                    "columnsFrom": ["entity_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {
+                "investigation_entities_investigation_id_entity_id_pk": {
+                    "name": "investigation_entities_investigation_id_entity_id_pk",
+                    "columns": ["investigation_id", "entity_id"]
+                }
+            },
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.investigations": {
+            "name": "investigations",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "uuid",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "default": "gen_random_uuid()"
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "now()"
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {},
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        }
+    },
+    "enums": {
+        "public.crawl_status": {
+            "name": "crawl_status",
+            "schema": "public",
+            "values": ["pending", "running", "completed", "failed"]
+        },
+        "public.edge_type": {
+            "name": "edge_type",
+            "schema": "public",
+            "values": ["owns", "works_at", "associated_with", "alias_of"]
+        },
+        "public.entity_type": {
+            "name": "entity_type",
+            "schema": "public",
+            "values": [
+                "person",
+                "org",
+                "domain",
+                "email",
+                "handle",
+                "ip",
+                "phone"
+            ]
+        }
+    },
+    "schemas": {},
+    "sequences": {},
+    "roles": {},
+    "policies": {},
+    "views": {},
+    "_meta": {
+        "columns": {},
+        "schemas": {},
+        "tables": {}
+    }
+}

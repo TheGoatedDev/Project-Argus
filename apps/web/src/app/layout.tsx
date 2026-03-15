@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import { Chakra_Petch, Orbitron } from "next/font/google";
+import { NavBar } from "@/components/nav-bar";
+import { cn } from "@/lib/utils";
 import { Providers } from "./providers";
 import "./globals.css";
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const bodyFont = Chakra_Petch({
+    subsets: ["latin"],
+    weight: ["300", "400", "500", "600", "700"],
+    variable: "--font-body",
+});
+
+const displayFont = Orbitron({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "800", "900"],
+    variable: "--font-heading",
+});
 
 export const metadata: Metadata = {
     title: "Argus",
@@ -17,9 +28,19 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className={cn("font-sans", geist.variable)}>
+        <html
+            lang="en"
+            className={cn(
+                "dark font-sans",
+                bodyFont.variable,
+                displayFont.variable,
+            )}
+        >
             <body>
-                <Providers>{children}</Providers>
+                <Providers>
+                    <NavBar />
+                    {children}
+                </Providers>
             </body>
         </html>
     );

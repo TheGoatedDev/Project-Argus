@@ -1,0 +1,29 @@
+{
+    "name": "@argus/scraper-dns",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.mts"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@argus/scraper-sdk": "workspace:*",
+        "@argus/types": "workspace:*",
+        "whois-json": "^2.0.4"
+    },
+    "devDependencies": {
+        "@argus/typescript-config": "workspace:*",
+        "@types/node": "^25.5.0",
+        "tsdown": "^0.20.0",
+        "typescript": "~5.9.0",
+        "vitest": "^4.1.0"
+    }
+}

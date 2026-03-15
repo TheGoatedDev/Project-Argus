@@ -16,13 +16,13 @@ export default defineConfig({
             command: "pnpm --filter @argus/api dev",
             url: "http://localhost:3001/api/health",
             reuseExistingServer: !process.env.CI,
-            cwd: "../..",
+            cwd: "..",
         },
         {
             command: "pnpm --filter @argus/web dev",
             url: "http://localhost:3000",
             reuseExistingServer: !process.env.CI,
-            cwd: "../..",
+            cwd: "..",
         },
     ],
     projects: [

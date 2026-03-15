@@ -1,5 +1,5 @@
 import { type Database, dataPoints, entities, entityEdges } from "@argus/db";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 export function createEntityService(db: Database) {
     return {
@@ -72,6 +72,59 @@ export function createEntityService(db: Database) {
                 .select()
                 .from(dataPoints)
                 .where(eq(dataPoints.entityId, id));
+        },
+
+        async search({
+            query,
+            type,
+            limit,
+            offset,
+        }: {
+            query: string;
+            type?: string;
+            limit: number;
+            offset: number;
+        }) {
+            const tsquery = sql`plainto_tsquery('english', ${query})`;
+            const conditions = [
+                sql`search_vector @@ ${tsquery}`,
+                isNull(entities.deletedAt),
+            ];
+            if (type) {
+                conditions.push(
+                    eq(
+                        entities.type,
+                        type as (typeof entities.type.enumValues)[number],
+                    ),
+                );
+            }
+
+            const rows = await db
+                .select({
+                    id: entities.id,
+                    type: entities.type,
+                    name: entities.name,
+                    metadata: entities.metadata,
+                    deletedAt: entities.deletedAt,
+                    createdAt: entities.createdAt,
+                    updatedAt: entities.updatedAt,
+                    rank: sql<number>`ts_rank_cd(search_vector, ${tsquery})`.as(
+                        "rank",
+                    ),
+                    total: sql<number>`count(*) OVER()`
+                        .mapWith(Number)
+                        .as("total"),
+                })
+                .from(entities)
+                .where(and(...conditions))
+                .orderBy(sql`rank DESC`)
+                .limit(limit)
+                .offset(offset);
+
+            const total = rows.length > 0 ? (rows[0]?.total ?? 0) : 0;
+            const results = rows.map(({ rank, total, ...entity }) => entity);
+
+            return { results, total };
         },
     };
 }

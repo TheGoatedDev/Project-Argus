@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "build": "next build",
-        "dev": "next dev --turbopack",
+        "dev": "dotenv -e ../../.env -- next dev --turbopack",
         "typecheck": "tsc --noEmit",
         "start": "next start"
     },
@@ -31,6 +31,7 @@
     },
     "devDependencies": {
         "@argus/api": "workspace:*",
+        "@argus/typescript-config": "workspace:*",
         "@tailwindcss/postcss": "^4.1.0",
         "@types/dagre": "^0.7.52",
         "@types/react": "^19.1.0",

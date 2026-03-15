@@ -23,11 +23,32 @@ export async function createTestDb() {
             type entity_type NOT NULL,
             name TEXT NOT NULL,
             metadata JSONB DEFAULT '{}',
-            search_vector TEXT GENERATED ALWAYS AS (name) STORED,
             deleted_at TIMESTAMPTZ,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         );
+
+        -- Add tsvector column and trigger (PGlite doesn't support GENERATED tsvector)
+        ALTER TABLE entities ADD COLUMN IF NOT EXISTS search_vector TSVECTOR;
+
+        CREATE OR REPLACE FUNCTION entities_search_vector_update() RETURNS trigger AS $$
+        BEGIN
+            NEW.search_vector :=
+                setweight(to_tsvector('english', coalesce(NEW.name, '')), 'A') ||
+                setweight(to_tsvector('english', coalesce(NEW.metadata::text, '')), 'B');
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        DROP TRIGGER IF EXISTS entities_search_vector_trigger ON entities;
+        CREATE TRIGGER entities_search_vector_trigger
+            BEFORE INSERT OR UPDATE ON entities
+            FOR EACH ROW EXECUTE FUNCTION entities_search_vector_update();
+
+        CREATE INDEX IF NOT EXISTS entities_search_vector_idx ON entities USING GIN (search_vector);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS entities_type_name_active_idx
+            ON entities (type, name) WHERE deleted_at IS NULL;
 
         CREATE TABLE IF NOT EXISTS entity_edges (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -39,6 +60,9 @@ export async function createTestDb() {
             metadata JSONB DEFAULT '{}',
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS edges_unique_active_idx
+            ON entity_edges (source_id, target_id, edge_type) WHERE true;
 
         CREATE TABLE IF NOT EXISTS data_points (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,6 +88,35 @@ export async function createTestDb() {
             added_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             notes TEXT,
             PRIMARY KEY (investigation_id, entity_id)
+        );
+
+        DO $$ BEGIN
+            CREATE TYPE crawl_status AS ENUM ('pending', 'running', 'completed', 'failed');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+
+        CREATE TABLE IF NOT EXISTS crawl_jobs (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            seed_query TEXT NOT NULL,
+            seed_type entity_type NOT NULL,
+            max_depth INTEGER NOT NULL,
+            current_depth INTEGER NOT NULL DEFAULT 0,
+            status crawl_status NOT NULL DEFAULT 'pending',
+            total_entities INTEGER NOT NULL DEFAULT 0,
+            total_edges INTEGER NOT NULL DEFAULT 0,
+            error TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            completed_at TIMESTAMPTZ
+        );
+
+        CREATE TABLE IF NOT EXISTS crawl_job_entities (
+            crawl_job_id UUID NOT NULL REFERENCES crawl_jobs(id) ON DELETE CASCADE,
+            entity_id UUID NOT NULL REFERENCES entities(id),
+            depth INTEGER NOT NULL,
+            scraper_used TEXT,
+            added_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            PRIMARY KEY (crawl_job_id, entity_id)
         );
     `);
 

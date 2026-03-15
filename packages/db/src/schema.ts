@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
+    customType,
     index,
+    integer,
     jsonb,
     pgEnum,
     pgTable,
@@ -11,6 +13,17 @@ import {
     uniqueIndex,
     uuid,
 } from "drizzle-orm/pg-core";
+
+/**
+ * Custom Drizzle column type for PostgreSQL `tsvector`.
+ * Ensures `drizzle-kit push` sees the real column type instead of `text`,
+ * preventing it from silently downgrading the column.
+ */
+const tsvector = customType<{ data: string }>({
+    dataType() {
+        return "tsvector";
+    },
+});
 
 export const entityTypeEnum = pgEnum("entity_type", [
     "person",
@@ -29,6 +42,13 @@ export const edgeTypeEnum = pgEnum("edge_type", [
     "alias_of",
 ]);
 
+export const crawlStatusEnum = pgEnum("crawl_status", [
+    "pending",
+    "running",
+    "completed",
+    "failed",
+]);
+
 export const entities = pgTable(
     "entities",
     {
@@ -36,9 +56,7 @@ export const entities = pgTable(
         type: entityTypeEnum().notNull(),
         name: text().notNull(),
         metadata: jsonb().$type<Record<string, unknown>>().default({}),
-        searchVector: text("search_vector").generatedAlwaysAs(
-            sql`setweight(to_tsvector('english', coalesce(name, '')), 'A') || setweight(to_tsvector('english', coalesce(metadata::text, '')), 'B')`,
-        ),
+        searchVector: tsvector("search_vector"),
         deletedAt: timestamp("deleted_at", { withTimezone: true }),
         createdAt: timestamp("created_at", { withTimezone: true })
             .defaultNow()
@@ -53,6 +71,10 @@ export const entities = pgTable(
         index("entities_deleted_at_idx")
             .on(table.deletedAt)
             .where(sql`deleted_at IS NULL`),
+        uniqueIndex("entities_type_name_active_idx")
+            .on(table.type, table.name)
+            .where(sql`deleted_at IS NULL`),
+        index("entities_search_vector_idx").using("gin", table.searchVector),
     ],
 );
 
@@ -133,6 +155,48 @@ export const investigationEntities = pgTable(
     (table) => [
         primaryKey({
             columns: [table.investigationId, table.entityId],
+        }),
+    ],
+);
+
+export const crawlJobs = pgTable("crawl_jobs", {
+    id: uuid().defaultRandom().primaryKey(),
+    seedQuery: text("seed_query").notNull(),
+    seedType: entityTypeEnum("seed_type").notNull(),
+    maxDepth: integer("max_depth").notNull(),
+    currentDepth: integer("current_depth").notNull().default(0),
+    status: crawlStatusEnum().notNull().default("pending"),
+    totalEntities: integer("total_entities").notNull().default(0),
+    totalEdges: integer("total_edges").notNull().default(0),
+    error: text(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+        .defaultNow()
+        .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+        .defaultNow()
+        .notNull()
+        .$onUpdate(() => new Date()),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+export const crawlJobEntities = pgTable(
+    "crawl_job_entities",
+    {
+        crawlJobId: uuid("crawl_job_id")
+            .references(() => crawlJobs.id, { onDelete: "cascade" })
+            .notNull(),
+        entityId: uuid("entity_id")
+            .references(() => entities.id)
+            .notNull(),
+        depth: integer().notNull(),
+        scraperUsed: text("scraper_used"),
+        addedAt: timestamp("added_at", { withTimezone: true })
+            .defaultNow()
+            .notNull(),
+    },
+    (table) => [
+        primaryKey({
+            columns: [table.crawlJobId, table.entityId],
         }),
     ],
 );

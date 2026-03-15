@@ -1,14 +1,17 @@
-import { GraphView } from "@/components/graph-view";
+import { Suspense } from "react";
+import { GraphPageView } from "@/components/graph-page-view";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GraphPage() {
     return (
-        <main className="h-screen flex flex-col">
-            <header className="p-4 border-b border-gray-200">
-                <h1 className="text-xl font-semibold">Entity Graph</h1>
-            </header>
-            <div className="flex-1">
-                <GraphView />
-            </div>
-        </main>
+        <Suspense
+            fallback={
+                <main className="flex h-screen items-center justify-center">
+                    <Skeleton className="h-64 w-64 rounded-lg" />
+                </main>
+            }
+        >
+            <GraphPageView />
+        </Suspense>
     );
 }

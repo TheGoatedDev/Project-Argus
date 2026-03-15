@@ -1,4 +1,4 @@
-import type { EntityType } from "./enums.js";
+import type { EdgeType, EntityType } from "./enums.js";
 
 export interface RawDataPoint {
     sourceProvider: string;
@@ -18,6 +18,36 @@ export interface MonitorOptions {
     maxResults?: number;
 }
 
+export interface ExtractedEntity {
+    type: EntityType;
+    name: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface ExtractedEdge {
+    sourceRef: string;
+    targetRef: string;
+    sourceType: EntityType;
+    targetType: EntityType;
+    edgeType: EdgeType;
+    confidence: number;
+}
+
+export interface ExtractedDataPoint {
+    entityRef: string;
+    entityType: EntityType;
+    sourceProvider: string;
+    sourceUrl: string;
+    rawData: Record<string, unknown>;
+    fetchedAt: Date;
+}
+
+export interface ExtractionResult {
+    entities: ExtractedEntity[];
+    edges: ExtractedEdge[];
+    dataPoints: ExtractedDataPoint[];
+}
+
 export interface ScraperPlugin {
     name: string;
     version: string;
@@ -28,6 +58,9 @@ export interface ScraperPlugin {
         query: string,
         options?: SearchOptions,
     ): AsyncGenerator<RawDataPoint>;
+
+    /** Structured extraction — returns entities, edges, and data points */
+    extract(query: string, options?: SearchOptions): Promise<ExtractionResult>;
 
     /** Continuous monitoring of a target */
     monitor?(

@@ -1,57 +1,87 @@
-import { EdgeTypeSchema, EntityTypeSchema } from "@argus/types";
-import { z } from "zod";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import type { z } from "zod";
+import {
+    dataPoints,
+    entities,
+    entityEdges,
+    investigationEntities,
+    investigations,
+} from "./schema.js";
 
-export const insertEntitySchema = z.object({
-    type: EntityTypeSchema,
-    name: z.string().min(1),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-});
+/**
+ * Compile-time assertion that a Zod schema's output type is assignable
+ * to the expected Drizzle model type. If the schema drifts from the
+ * table definition, this line produces a type error.
+ */
+type AssertSchemaMatches<TSchema extends z.ZodTypeAny, TModel> =
+    z.infer<TSchema> extends TModel ? TSchema : never;
 
-export const selectEntitySchema = z.object({
-    id: z.string().uuid(),
-    type: EntityTypeSchema,
-    name: z.string(),
-    metadata: z.record(z.string(), z.unknown()).nullable(),
-    searchVector: z.string().nullable(),
-    deletedAt: z.coerce.date().nullable(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
-});
+// --- Entities ---
+export const insertEntitySchema = createInsertSchema(entities);
+export const selectEntitySchema = createSelectSchema(entities);
 
-export const updateEntitySchema = z.object({
-    name: z.string().min(1).optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-});
+type _AssertInsertEntity = AssertSchemaMatches<
+    typeof insertEntitySchema,
+    InferInsertModel<typeof entities>
+>;
+type _AssertSelectEntity = AssertSchemaMatches<
+    typeof selectEntitySchema,
+    InferSelectModel<typeof entities>
+>;
 
-export const insertEntityEdgeSchema = z.object({
-    sourceId: z.string().uuid(),
-    targetId: z.string().uuid(),
-    edgeType: EdgeTypeSchema,
-    confidence: z.number().min(0).max(1).default(1.0),
-    sourceProvider: z.string().optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-});
+// --- Entity Edges ---
+export const insertEntityEdgeSchema = createInsertSchema(entityEdges);
+export const selectEntityEdgeSchema = createSelectSchema(entityEdges);
 
-export const insertDataPointSchema = z.object({
-    entityId: z.string().uuid(),
-    sourceProvider: z.string(),
-    sourceUrl: z.string().url(),
-    rawData: z.record(z.string(), z.unknown()),
-    fetchedAt: z.coerce.date(),
-});
+type _AssertInsertEdge = AssertSchemaMatches<
+    typeof insertEntityEdgeSchema,
+    InferInsertModel<typeof entityEdges>
+>;
+type _AssertSelectEdge = AssertSchemaMatches<
+    typeof selectEntityEdgeSchema,
+    InferSelectModel<typeof entityEdges>
+>;
 
-export const insertInvestigationSchema = z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-});
+// --- Data Points ---
+export const insertDataPointSchema = createInsertSchema(dataPoints);
+export const selectDataPointSchema = createSelectSchema(dataPoints);
 
-export const updateInvestigationSchema = z.object({
-    name: z.string().min(1).optional(),
-    description: z.string().optional(),
-});
+type _AssertInsertDataPoint = AssertSchemaMatches<
+    typeof insertDataPointSchema,
+    InferInsertModel<typeof dataPoints>
+>;
+type _AssertSelectDataPoint = AssertSchemaMatches<
+    typeof selectDataPointSchema,
+    InferSelectModel<typeof dataPoints>
+>;
 
-export const insertInvestigationEntitySchema = z.object({
-    investigationId: z.string().uuid(),
-    entityId: z.string().uuid(),
-    notes: z.string().optional(),
-});
+// --- Investigations ---
+export const insertInvestigationSchema = createInsertSchema(investigations);
+export const selectInvestigationSchema = createSelectSchema(investigations);
+
+type _AssertInsertInvestigation = AssertSchemaMatches<
+    typeof insertInvestigationSchema,
+    InferInsertModel<typeof investigations>
+>;
+type _AssertSelectInvestigation = AssertSchemaMatches<
+    typeof selectInvestigationSchema,
+    InferSelectModel<typeof investigations>
+>;
+
+// --- Investigation Entities ---
+export const insertInvestigationEntitySchema = createInsertSchema(
+    investigationEntities,
+);
+export const selectInvestigationEntitySchema = createSelectSchema(
+    investigationEntities,
+);
+
+type _AssertInsertInvestigationEntity = AssertSchemaMatches<
+    typeof insertInvestigationEntitySchema,
+    InferInsertModel<typeof investigationEntities>
+>;
+type _AssertSelectInvestigationEntity = AssertSchemaMatches<
+    typeof selectInvestigationEntitySchema,
+    InferSelectModel<typeof investigationEntities>
+>;

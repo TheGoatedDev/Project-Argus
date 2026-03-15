@@ -1,9 +1,10 @@
 {
-    "extends": "../../tsconfig.base.json",
+    "extends": "@argus/typescript-config/tsconfig.base.json",
     "compilerOptions": {
         "outDir": "dist",
         "rootDir": "src",
         "isolatedDeclarations": false
     },
-    "include": ["src"]
+    "include": ["src"],
+    "exclude": ["node_modules", "dist", "src/migrate.ts", "src/baseline.ts"]
 }

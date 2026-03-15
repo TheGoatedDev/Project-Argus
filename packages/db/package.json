@@ -19,6 +19,14 @@
         "./zod": {
             "import": "./dist/zod.mjs",
             "types": "./dist/zod.d.mts"
+        },
+        "./test-utils": {
+            "import": "./src/test-utils.ts",
+            "types": "./src/test-utils.ts"
+        },
+        "./seed": {
+            "import": "./src/seed.ts",
+            "types": "./src/seed.ts"
         }
     },
     "scripts": {
@@ -26,18 +34,23 @@
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "db:generate": "drizzle-kit generate",
+        "db:migrate": "node --import tsx src/migrate.ts",
+        "db:baseline": "node --import tsx src/baseline.ts",
         "db:push": "drizzle-kit push"
     },
     "dependencies": {
+        "@argus/types": "workspace:*",
         "drizzle-orm": "^0.45.0",
-        "postgres": "^3.4.0",
-        "@argus/types": "workspace:*"
+        "drizzle-zod": "^0.8.3",
+        "postgres": "^3.4.0"
     },
     "devDependencies": {
+        "@argus/typescript-config": "workspace:*",
+        "@electric-sql/pglite": "^0.3.0",
         "drizzle-kit": "^0.31.0",
         "tsdown": "^0.20.0",
+        "tsx": "^4.21.0",
         "typescript": "~5.9.0",
-        "@electric-sql/pglite": "^0.3.0",
         "vitest": "^4.1.0",
         "zod": "^4.3.0"
     }
