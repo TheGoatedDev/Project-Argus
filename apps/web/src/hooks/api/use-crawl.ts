@@ -8,9 +8,7 @@ import { searchKeys } from "./use-search";
 
 type CrawlStatus = "idle" | "crawling" | "completed" | "failed";
 
-export interface CrawlEventWithId extends CrawlEvent {
-    eventId: number;
-}
+export type CrawlEventWithId = CrawlEvent & { eventId: number };
 
 interface CrawlState {
     status: CrawlStatus;
