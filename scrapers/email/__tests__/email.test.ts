@@ -89,4 +89,28 @@ describe("createEmailScraper", () => {
         const scraper = createEmailScraper();
         expect(await scraper.ping()).toBe(true);
     });
+
+    it("extract() normalizes email to lowercase", async () => {
+        const scraper = createEmailScraper();
+        const result = await scraper.extract("USER@GMAIL.COM");
+        const emailEntity = result.entities.find((e) => e.type === "email");
+        expect(emailEntity!.name).toBe("user@gmail.com");
+    });
+
+    it("extract() handles MX resolution failure gracefully", async () => {
+        vi.mocked(dns.resolveMx).mockRejectedValue(new Error("DNS failure"));
+        const scraper = createEmailScraper();
+        const result = await scraper.extract("user@badhost.com");
+        const emailEntity = result.entities.find((e) => e.type === "email");
+        expect(emailEntity).toBeDefined();
+        expect(emailEntity!.metadata?.hasMx).toBe(false);
+    });
+
+    it("extract() without HIBP key skips breach check", async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch");
+        const scraper = createEmailScraper(); // no hibpApiKey
+        await scraper.extract("user@gmail.com");
+        // fetch should not have been called (only dns is used, no HIBP API call)
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
 });

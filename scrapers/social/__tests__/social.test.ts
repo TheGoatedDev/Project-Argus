@@ -49,4 +49,34 @@ describe("createSocialScraper", () => {
         const scraper = createSocialScraper();
         expect(await scraper.ping()).toBe(true);
     });
+
+    it("extract() returns empty entities when no platforms match", async () => {
+        vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
+            return new Response(null, { status: 404 });
+        });
+        const scraper = createSocialScraper();
+        const result = await scraper.extract("nonexistentuser999");
+        expect(result.entities).toHaveLength(0);
+        expect(result.edges).toHaveLength(0);
+    });
+
+    it("extract() creates correct alias edge count for 3 matches", async () => {
+        vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+            const urlStr = typeof url === "string" ? url : url.toString();
+            if (
+                urlStr.includes("github.com/triuser") ||
+                urlStr.includes("dev.to/triuser") ||
+                urlStr.includes("medium.com/@triuser")
+            ) {
+                return new Response(null, { status: 200 });
+            }
+            return new Response(null, { status: 404 });
+        });
+        const scraper = createSocialScraper();
+        const result = await scraper.extract("triuser");
+        expect(result.entities).toHaveLength(3);
+        // n*(n-1)/2 = 3*2/2 = 3 alias edges
+        expect(result.edges).toHaveLength(3);
+        expect(result.edges.every((e) => e.edgeType === "alias_of")).toBe(true);
+    });
 });

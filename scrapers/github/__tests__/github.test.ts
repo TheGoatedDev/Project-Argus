@@ -74,4 +74,49 @@ describe("createGitHubScraper", () => {
         const scraper = createGitHubScraper();
         expect(await scraper.ping()).toBe(true);
     });
+
+    it("extract() strips @ prefix from handle input", async () => {
+        const scraper = createGitHubScraper();
+        const result = await scraper.extract("@octocat");
+        const handle = result.entities.find((e) => e.type === "handle");
+        expect(handle).toBeDefined();
+        expect(handle!.name).toBe("@octocat");
+    });
+
+    it("extract() handles user with null email and company", async () => {
+        vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+            const urlStr = typeof url === "string" ? url : url.toString();
+            if (urlStr.includes("/users/nulluser")) {
+                return new Response(
+                    JSON.stringify({
+                        ...mockUser,
+                        login: "nulluser",
+                        name: "Null User",
+                        email: null,
+                        company: null,
+                    }),
+                    { status: 200 },
+                );
+            }
+            return new Response("Not Found", { status: 404 });
+        });
+
+        const scraper = createGitHubScraper();
+        const result = await scraper.extract("nulluser");
+
+        expect(result.entities.find((e) => e.type === "email")).toBeUndefined();
+        expect(result.entities.find((e) => e.type === "org")).toBeUndefined();
+        // Should still have handle + person
+        expect(result.entities.length).toBe(2);
+        // Only the person->handle edge (no email or org edges)
+        expect(result.edges.length).toBe(1);
+    });
+
+    it("ping() returns false on network error", async () => {
+        vi.spyOn(globalThis, "fetch").mockRejectedValue(
+            new Error("Network failure"),
+        );
+        const scraper = createGitHubScraper();
+        expect(await scraper.ping()).toBe(false);
+    });
 });
