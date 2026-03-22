@@ -30,7 +30,7 @@ export function SearchView() {
         return () => clearTimeout(timer);
     }, [query]);
 
-    const { data, isLoading } = useSearch(
+    const { data, isLoading, isFetching } = useSearch(
         debouncedQuery,
         typeFilter,
         PAGE_SIZE,
@@ -60,7 +60,7 @@ export function SearchView() {
                 <button
                     type="button"
                     onClick={() => setTypeFilter(undefined)}
-                    className={`rounded-[0.2rem] px-3 py-1 text-xs font-medium uppercase tracking-wider transition-all ${
+                    className={`rounded-[0.2rem] px-3 py-1 text-xs font-medium uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
                         typeFilter === undefined
                             ? "bg-primary text-primary-foreground glow-subtle"
                             : "bg-card border border-primary/20 text-muted-foreground hover:border-primary/40"
@@ -77,7 +77,7 @@ export function SearchView() {
                                 typeFilter === type ? undefined : type,
                             )
                         }
-                        className={`rounded-[0.2rem] px-3 py-1 text-xs font-medium uppercase tracking-wider transition-all ${
+                        className={`rounded-[0.2rem] px-3 py-1 text-xs font-medium uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
                             typeFilter === type
                                 ? "bg-primary text-primary-foreground glow-subtle"
                                 : "bg-card border border-primary/20 text-muted-foreground hover:border-primary/40"
@@ -95,6 +95,23 @@ export function SearchView() {
                     <Skeleton className="h-20 w-full bg-muted border border-primary/10 animate-pulse" />
                     <Skeleton className="h-20 w-full bg-muted border border-primary/10 animate-pulse" />
                     <Skeleton className="h-20 w-full bg-muted border border-primary/10 animate-pulse" />
+                </div>
+            ) : isFetching && data ? (
+                <div className="relative">
+                    <div className="pointer-events-none absolute inset-0 z-10 rounded bg-background/40" />
+                    <div className="space-y-3 opacity-60">
+                        {data.results.map((entity) => (
+                            <EntityCard
+                                key={entity.id}
+                                entity={
+                                    entity as Parameters<
+                                        typeof EntityCard
+                                    >[0]["entity"]
+                                }
+                                onClick={() => handleEntityClick(entity.id)}
+                            />
+                        ))}
+                    </div>
                 </div>
             ) : !debouncedQuery ? (
                 <EmptyState

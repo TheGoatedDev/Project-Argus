@@ -1,5 +1,5 @@
 import { type Database, dataPoints, entities, entityEdges } from "@argus/db";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, isNull, or, sql } from "drizzle-orm";
 
 export function createEntityService(db: Database) {
     return {
@@ -61,10 +61,37 @@ export function createEntityService(db: Database) {
         },
 
         async getEdges(id: string) {
+            const sourceEntity = aliasedTable(entities, "source_entity");
+            const targetEntity = aliasedTable(entities, "target_entity");
             return db
-                .select()
+                .select({
+                    id: entityEdges.id,
+                    sourceId: entityEdges.sourceId,
+                    sourceName: sourceEntity.name,
+                    sourceType: sourceEntity.type,
+                    targetId: entityEdges.targetId,
+                    targetName: targetEntity.name,
+                    targetType: targetEntity.type,
+                    edgeType: entityEdges.edgeType,
+                    confidence: entityEdges.confidence,
+                    sourceProvider: entityEdges.sourceProvider,
+                    createdAt: entityEdges.createdAt,
+                })
                 .from(entityEdges)
-                .where(eq(entityEdges.sourceId, id));
+                .innerJoin(
+                    sourceEntity,
+                    eq(entityEdges.sourceId, sourceEntity.id),
+                )
+                .innerJoin(
+                    targetEntity,
+                    eq(entityEdges.targetId, targetEntity.id),
+                )
+                .where(
+                    or(
+                        eq(entityEdges.sourceId, id),
+                        eq(entityEdges.targetId, id),
+                    ),
+                );
         },
 
         async getDataPoints(id: string) {

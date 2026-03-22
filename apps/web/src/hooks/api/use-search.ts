@@ -1,7 +1,7 @@
 "use client";
 
 import type { EntityType } from "@argus/types";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/api";
 
 export const searchKeys = {
@@ -34,5 +34,6 @@ export function useSearch(
             return res.json();
         },
         enabled: q.length > 0,
+        placeholderData: keepPreviousData,
     });
 }

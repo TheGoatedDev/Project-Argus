@@ -107,10 +107,22 @@ export function EntityDetailSheet({
                                         </TableHeader>
                                         <TableBody>
                                             {edges.map((edge) => {
-                                                const connectedId =
-                                                    edge.sourceId === entityId
-                                                        ? edge.targetId
-                                                        : edge.sourceId;
+                                                const isSource =
+                                                    edge.sourceId === entityId;
+                                                const connectedId = isSource
+                                                    ? edge.targetId
+                                                    : edge.sourceId;
+                                                const connectedName = isSource
+                                                    ? (
+                                                          edge as {
+                                                              targetName?: string;
+                                                          }
+                                                      ).targetName
+                                                    : (
+                                                          edge as {
+                                                              sourceName?: string;
+                                                          }
+                                                      ).sourceName;
                                                 return (
                                                     <TableRow key={edge.id}>
                                                         <TableCell>
@@ -121,7 +133,8 @@ export function EntityDetailSheet({
                                                                 href={`/entities/${connectedId}`}
                                                                 className="text-primary hover:underline"
                                                             >
-                                                                {connectedId}
+                                                                {connectedName ??
+                                                                    connectedId}
                                                             </Link>
                                                         </TableCell>
                                                     </TableRow>

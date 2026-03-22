@@ -40,9 +40,12 @@ export function InvestigationsList() {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [createError, setCreateError] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     function handleCreate() {
         if (!name.trim()) return;
+        setCreateError(null);
         createMutation.mutate(
             { name: name.trim(), description: description.trim() || undefined },
             {
@@ -51,14 +54,27 @@ export function InvestigationsList() {
                     setName("");
                     setDescription("");
                 },
+                onError: (err) =>
+                    setCreateError(
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to create investigation",
+                    ),
             },
         );
     }
 
     function handleDelete() {
         if (!deleteId) return;
+        setDeleteError(null);
         deleteMutation.mutate(deleteId, {
             onSuccess: () => setDeleteId(null),
+            onError: (err) =>
+                setDeleteError(
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to delete investigation",
+                ),
         });
     }
 
@@ -114,10 +130,21 @@ export function InvestigationsList() {
                         {investigations.map((inv) => (
                             <TableRow
                                 key={inv.id}
-                                className="cursor-pointer hover:bg-primary/5 transition-colors"
+                                className="cursor-pointer hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                tabIndex={0}
+                                role="link"
+                                aria-label={`Open investigation: ${inv.name}`}
                                 onClick={() =>
                                     router.push(`/investigations/${inv.id}`)
                                 }
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        router.push(
+                                            `/investigations/${inv.id}`,
+                                        );
+                                    }
+                                }}
                             >
                                 <TableCell className="font-medium">
                                     {inv.name}
@@ -150,22 +177,52 @@ export function InvestigationsList() {
             )}
 
             {/* Create dialog */}
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <Dialog
+                open={createOpen}
+                onOpenChange={(open) => {
+                    setCreateOpen(open);
+                    if (!open) setCreateError(null);
+                }}
+            >
                 <DialogContent className="bg-card border border-primary/20">
                     <DialogHeader>
                         <DialogTitle>New Investigation</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
-                        <Input
-                            placeholder="Investigation name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                        <Textarea
-                            placeholder="Description (optional)"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
+                        <div className="space-y-1.5">
+                            <label
+                                htmlFor="inv-name"
+                                className="text-sm font-medium"
+                            >
+                                Name
+                            </label>
+                            <Input
+                                id="inv-name"
+                                placeholder="e.g. Acme Corp Breach"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label
+                                htmlFor="inv-description"
+                                className="text-sm font-medium text-muted-foreground"
+                            >
+                                Description{" "}
+                                <span className="font-normal">(optional)</span>
+                            </label>
+                            <Textarea
+                                id="inv-description"
+                                placeholder="What is this investigation about?"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
+                        </div>
+                        {createError && (
+                            <p className="text-xs text-destructive font-mono">
+                                {createError}
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
                         <DialogClose render={<Button variant="outline" />}>
@@ -184,7 +241,12 @@ export function InvestigationsList() {
             {/* Delete confirmation dialog */}
             <Dialog
                 open={deleteId !== null}
-                onOpenChange={(open) => !open && setDeleteId(null)}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeleteId(null);
+                        setDeleteError(null);
+                    }
+                }}
             >
                 <DialogContent className="bg-card border border-primary/20">
                     <DialogHeader>
@@ -194,6 +256,11 @@ export function InvestigationsList() {
                         Are you sure you want to delete this investigation? This
                         action cannot be undone.
                     </p>
+                    {deleteError && (
+                        <p className="text-xs text-destructive font-mono">
+                            {deleteError}
+                        </p>
+                    )}
                     <DialogFooter>
                         <DialogClose render={<Button variant="outline" />}>
                             Cancel

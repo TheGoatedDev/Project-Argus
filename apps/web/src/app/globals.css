@@ -201,6 +201,10 @@
     animation: flicker 4s linear infinite;
 }
 
+@keyframes dash-flow {
+    to { stroke-dashoffset: -18; }
+}
+
 @keyframes crawl-scan {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
@@ -233,7 +237,7 @@
             oklch(0 0 0 / 2.5%) 4px
         );
         pointer-events: none;
-        z-index: 9999;
+        z-index: 1;
     }
 
     /* Scrollbar styling */

@@ -33,6 +33,7 @@ export function InvestigationDetail({ id }: { id: string }) {
     const removeEntity = useRemoveEntityFromInvestigation();
 
     const [addOpen, setAddOpen] = useState(false);
+    const [removeEntityId, setRemoveEntityId] = useState<string | null>(null);
 
     // Get entity details for investigation entities
     const investigationEntityIds = new Set(
@@ -54,8 +55,12 @@ export function InvestigationDetail({ id }: { id: string }) {
         );
     }
 
-    function handleRemoveEntity(entityId: string) {
-        removeEntity.mutate({ investigationId: id, entityId });
+    function handleRemoveEntity() {
+        if (!removeEntityId) return;
+        removeEntity.mutate(
+            { investigationId: id, entityId: removeEntityId },
+            { onSuccess: () => setRemoveEntityId(null) },
+        );
     }
 
     if (isLoading) {
@@ -147,8 +152,9 @@ export function InvestigationDetail({ id }: { id: string }) {
                             <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                className="mt-4 hover:text-neon-red"
-                                onClick={() => handleRemoveEntity(entity.id)}
+                                className="mt-4 hover:text-destructive"
+                                aria-label={`Remove ${entity.name} from investigation`}
+                                onClick={() => setRemoveEntityId(entity.id)}
                             >
                                 <TrashIcon />
                             </Button>
@@ -168,6 +174,34 @@ export function InvestigationDetail({ id }: { id: string }) {
                         <DialogClose render={<Button variant="outline" />}>
                             Cancel
                         </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Remove entity confirmation */}
+            <Dialog
+                open={removeEntityId !== null}
+                onOpenChange={(open) => !open && setRemoveEntityId(null)}
+            >
+                <DialogContent className="bg-card border border-primary/20">
+                    <DialogHeader>
+                        <DialogTitle>Remove Entity</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-sm text-muted-foreground">
+                        Remove this entity from the investigation? It will not
+                        be deleted from the system.
+                    </p>
+                    <DialogFooter>
+                        <DialogClose render={<Button variant="outline" />}>
+                            Cancel
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            onClick={handleRemoveEntity}
+                            disabled={removeEntity.isPending}
+                        >
+                            Remove
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

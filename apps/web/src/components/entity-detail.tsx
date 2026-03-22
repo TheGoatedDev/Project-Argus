@@ -3,20 +3,18 @@
 import type { EntityType } from "@argus/types";
 import {
     ArrowLeftIcon,
-    BugIcon,
-    CheckCircle2Icon,
     ChevronDownIcon,
     ChevronRightIcon,
     ExternalLinkIcon,
-    Loader2Icon,
     NetworkIcon,
     PencilIcon,
     TrashIcon,
-    XCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CrawlButton } from "@/components/crawl-button";
+import { CrawlFeedback } from "@/components/crawl-feedback";
 import { EntityTypeBadge } from "@/components/entity-type-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,21 +56,40 @@ export function EntityDetail({ id }: { id: string }) {
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [editName, setEditName] = useState("");
+    const [editError, setEditError] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [crawlDepth, setCrawlDepth] = useState(1);
     const [expandedDataPoints, setExpandedDataPoints] = useState<Set<string>>(
         new Set(),
     );
 
     function handleEdit() {
         if (!editName.trim()) return;
+        setEditError(null);
         updateMutation.mutate(
             { id, name: editName.trim() },
-            { onSuccess: () => setEditOpen(false) },
+            {
+                onSuccess: () => setEditOpen(false),
+                onError: (err) =>
+                    setEditError(
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to update entity",
+                    ),
+            },
         );
     }
 
     function handleDelete() {
+        setDeleteError(null);
         deleteMutation.mutate(id, {
             onSuccess: () => router.push("/search"),
+            onError: (err) =>
+                setDeleteError(
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to delete entity",
+                ),
         });
     }
 
@@ -130,28 +147,18 @@ export function EntityDetail({ id }: { id: string }) {
                     <NetworkIcon data-icon="inline-start" />
                     View in Graph
                 </Button>
-                <Button
-                    variant="outline"
-                    className="border-primary/20 hover:glow-subtle"
-                    onClick={() => {
+                <CrawlButton
+                    depth={crawlDepth}
+                    onDepthChange={setCrawlDepth}
+                    onCrawl={() =>
                         crawl.startCrawl(
                             entity.name,
                             entity.type as EntityType,
-                            1,
-                        );
-                    }}
-                    disabled={crawl.status === "crawling"}
-                >
-                    {crawl.status === "crawling" ? (
-                        <Loader2Icon
-                            className="size-4 animate-spin"
-                            data-icon="inline-start"
-                        />
-                    ) : (
-                        <BugIcon data-icon="inline-start" />
-                    )}
-                    Crawl
-                </Button>
+                            crawlDepth,
+                        )
+                    }
+                    isCrawling={crawl.status === "crawling"}
+                />
                 <Button
                     variant="ghost"
                     size="icon"
@@ -174,120 +181,7 @@ export function EntityDetail({ id }: { id: string }) {
             </div>
 
             {/* Crawl Feedback */}
-            {crawl.status !== "idle" && (
-                <div className="relative overflow-hidden rounded-[0.2rem] border border-primary/20 bg-card">
-                    {/* Animated top border — pulsing scanline while crawling */}
-                    {crawl.status === "crawling" && (
-                        <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
-                            <div
-                                className="h-full w-full"
-                                style={{
-                                    background:
-                                        "linear-gradient(90deg, transparent, var(--neon-cyan), transparent)",
-                                    animation:
-                                        "crawl-scan 1.5s ease-in-out infinite",
-                                }}
-                            />
-                        </div>
-                    )}
-
-                    <div className="p-4 space-y-3">
-                        {/* Status header */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                {crawl.status === "crawling" && (
-                                    <Loader2Icon className="size-4 animate-spin text-primary" />
-                                )}
-                                {crawl.status === "completed" && (
-                                    <CheckCircle2Icon className="size-4 text-neon-green" />
-                                )}
-                                {crawl.status === "failed" && (
-                                    <XCircleIcon className="size-4 text-destructive" />
-                                )}
-                                <span className="text-xs font-mono uppercase tracking-widest text-primary">
-                                    {crawl.status === "crawling"
-                                        ? `Crawling depth ${crawl.currentDepth}...`
-                                        : crawl.status === "completed"
-                                          ? "Crawl Complete"
-                                          : "Crawl Failed"}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">
-                                <span>{crawl.totalEntities} entities</span>
-                                <span>{crawl.totalEdges} edges</span>
-                            </div>
-                        </div>
-
-                        {/* Error message */}
-                        {crawl.error && (
-                            <p className="text-xs font-mono text-destructive">
-                                {crawl.error}
-                            </p>
-                        )}
-
-                        {/* Event log — terminal-style feed */}
-                        {crawl.events.length > 0 && (
-                            <div className="max-h-36 overflow-auto rounded-[0.2rem] bg-background/60 border border-primary/10 p-2 space-y-0.5">
-                                {crawl.events.map((event) => (
-                                    <div
-                                        key={event.eventId}
-                                        className="text-[11px] leading-relaxed font-mono"
-                                    >
-                                        {event.type === "crawl:depth" && (
-                                            <span className="text-primary/60">
-                                                ── depth {event.depth} ·{" "}
-                                                {event.entitiesAtDepth} targets
-                                                ──
-                                            </span>
-                                        )}
-                                        {event.type === "crawl:scrape" && (
-                                            <span className="text-neon-green/80">
-                                                <span className="text-muted-foreground">
-                                                    [{event.scraperName}]
-                                                </span>{" "}
-                                                {event.entityName}{" "}
-                                                <span className="text-neon-green">
-                                                    +{event.newEntities}e +
-                                                    {event.newEdges}r
-                                                </span>
-                                            </span>
-                                        )}
-                                        {event.type === "crawl:error" && (
-                                            <span className="text-destructive/80">
-                                                <span className="text-muted-foreground">
-                                                    [{event.scraperName}]
-                                                </span>{" "}
-                                                {event.entityName}:{" "}
-                                                {event.error}
-                                            </span>
-                                        )}
-                                        {event.type === "crawl:completed" && (
-                                            <span className="text-primary">
-                                                done · {event.totalEntities}{" "}
-                                                entities · {event.totalEdges}{" "}
-                                                edges · depth{" "}
-                                                {event.depthReached}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Dismiss button when done */}
-                        {(crawl.status === "completed" ||
-                            crawl.status === "failed") && (
-                            <button
-                                type="button"
-                                onClick={crawl.reset}
-                                className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                Dismiss
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
+            <CrawlFeedback crawl={crawl} />
 
             {/* Metadata */}
             {metadataEntries.length > 0 && (
@@ -338,10 +232,15 @@ export function EntityDetail({ id }: { id: string }) {
                             </TableHeader>
                             <TableBody>
                                 {edges.map((edge) => {
-                                    const connectedId =
-                                        edge.sourceId === id
-                                            ? edge.targetId
-                                            : edge.sourceId;
+                                    const isSource = edge.sourceId === id;
+                                    const connectedId = isSource
+                                        ? edge.targetId
+                                        : edge.sourceId;
+                                    const connectedName = isSource
+                                        ? (edge as { targetName?: string })
+                                              .targetName
+                                        : (edge as { sourceName?: string })
+                                              .sourceName;
                                     return (
                                         <TableRow key={edge.id}>
                                             <TableCell className="font-medium">
@@ -352,7 +251,8 @@ export function EntityDetail({ id }: { id: string }) {
                                                     href={`/entities/${connectedId}`}
                                                     className="text-primary hover:underline"
                                                 >
-                                                    {connectedId}
+                                                    {connectedName ??
+                                                        connectedId}
                                                 </Link>
                                             </TableCell>
                                             <TableCell>
@@ -425,16 +325,36 @@ export function EntityDetail({ id }: { id: string }) {
             )}
 
             {/* Edit dialog */}
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <Dialog
+                open={editOpen}
+                onOpenChange={(open) => {
+                    setEditOpen(open);
+                    if (!open) setEditError(null);
+                }}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Edit Entity</DialogTitle>
                     </DialogHeader>
-                    <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Entity name"
-                    />
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="edit-entity-name"
+                            className="text-sm font-medium"
+                        >
+                            Entity name
+                        </label>
+                        <Input
+                            id="edit-entity-name"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="e.g. example.com"
+                        />
+                        {editError && (
+                            <p className="text-xs text-destructive font-mono">
+                                {editError}
+                            </p>
+                        )}
+                    </div>
                     <DialogFooter>
                         <DialogClose render={<Button variant="outline" />}>
                             Cancel
@@ -452,7 +372,13 @@ export function EntityDetail({ id }: { id: string }) {
             </Dialog>
 
             {/* Delete confirmation */}
-            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <Dialog
+                open={deleteOpen}
+                onOpenChange={(open) => {
+                    setDeleteOpen(open);
+                    if (!open) setDeleteError(null);
+                }}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Entity</DialogTitle>
@@ -461,6 +387,11 @@ export function EntityDetail({ id }: { id: string }) {
                         Are you sure you want to delete &quot;{entity.name}
                         &quot;? This action cannot be undone.
                     </p>
+                    {deleteError && (
+                        <p className="text-xs text-destructive font-mono">
+                            {deleteError}
+                        </p>
+                    )}
                     <DialogFooter>
                         <DialogClose render={<Button variant="outline" />}>
                             Cancel
